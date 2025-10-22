@@ -4,22 +4,21 @@ export default async function handler(req, res) {
 
   if (!client_id || !client_secret) {
     return res.status(400).json({ 
-      error: 'Missing credentials in environment variables' 
+      error: 'Missing KICK_CLIENT_ID and KICK_CLIENT_SECRET environment variables' 
     });
   }
 
   try {
-    // Try OAuth token endpoint
-    const response = await fetch('https://kick.com/oauth2/token', {
+    // Correct OAuth endpoint
+    const response = await fetch('https://id.kick.com/oauth/token', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       body: new URLSearchParams({
-        client_id: client_id,
-        client_secret: client_secret,
         grant_type: 'client_credentials',
-        scope: 'events:subscribe'
+        client_id: client_id,
+        client_secret: client_secret
       })
     });
 
@@ -28,11 +27,13 @@ export default async function handler(req, res) {
     if (!response.ok) {
       return res.status(response.status).json({
         error: 'Failed to get token',
+        status: response.status,
         details: data
       });
     }
 
     return res.json({
+      success: true,
       access_token: data.access_token,
       expires_in: data.expires_in,
       token_type: data.token_type
